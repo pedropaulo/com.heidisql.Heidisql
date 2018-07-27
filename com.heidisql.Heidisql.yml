@@ -1,0 +1,103 @@
+app-id: com.heidisql.Heidisql
+branch: stable
+
+runtime: org.winepak.Platform
+runtime-version: 3.0
+sdk: org.winepak.Sdk
+
+command: heidisql
+
+add-extensions:
+    org.winepak.Platform.x86_64/3.0:
+    directory: lib/32bit
+    version: 3.0
+    add-ld-path: lib
+    no-autodownload: false
+
+finish-args:
+  - --socket=x11
+  - --socket=pulseaudio
+  - --device=dri
+  - --allow=multiarch
+  - --share=network
+
+modules:
+  - name: setup-compat32
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/32bit
+      - ln -s /app/lib/32bit/lib/ld-linux.so.2 /app/lib/ld-linux.so.2
+    
+  - name: heidisql
+    buildsystem: simple
+    build-commands:
+      - install -d /app/bin
+      - install apply_extra /app/bin
+      - install heidisql /app/bin
+      - install -Dm644 com.heidisql.Heidisql.appdata.xml /app/share/appdata/com.heidisql.Heidisql.appdata.xml
+      - install -Dm644 com.heidisql.Heidisql.desktop /app/share/applications/com.heidisql.Heidisql.desktop
+      - install -Dm644 com.heidisql.Heidisql.256x256.png /app/share/icons/hicolor/256x256/apps/com.heidisql.Heidisql.png
+      - install -Dm644 com.heidisql.Heidisql.128x128.png /app/share/icons/hicolor/128x128/apps/com.heidisql.Heidisql.png
+      - install -Dm644 com.heidisql.Heidisql.64x64.png /app/share/icons/hicolor/64x64/apps/com.heidisql.Heidisql.png
+      - install -Dm644 com.heidisql.Heidisql.32x32.png /app/share/icons/hicolor/32x32/apps/com.heidisql.Heidisql.png
+      - install -Dm644 com.heidisql.Heidisql.16x16.png /app/share/icons/hicolor/16x16/apps/com.heidisql.Heidisql.png
+    sources:
+      - type: extra-data
+        only-arches:
+          - x86_64
+        url: https://www.heidisql.com/downloads/releases/HeidiSQL_9.5_64_Portable.zip
+        sha256: 759a3451fead31ee3dfe6a79b8f087643f7cdbe9864b148f684e53d31963220c
+        size: 7158121
+        filename: heidisql.zip
+      - type: extra-data
+        only-arches:
+          - i386
+        url: https://www.heidisql.com/downloads/releases/HeidiSQL_9.5_Portable.zip
+        sha256: a50accd44f83b98bc1bdb7cf07b02ac2a240bb34ad08ac07dd9a9028fcdfdab7
+        size: 7158121
+        filename: heidisql.zip
+      - type: script
+        dest-filename: apply_extra
+        commands:
+          - mkdir -p /app/extra/heidisql
+          - unzip -qq -d /app/extra/heidisql heidisql.zip
+          - rm heidisql.zip
+      - type: script
+        only-arches:
+          - x86_64
+        dest-filename: heidisql
+        commands:
+          - export WINEARCH=win64
+          - mkdir -p /var/data/heidisql
+          - cp -a /app/extra/heidisql /var/data
+          
+          - wineboot
+          
+          - wine64 /var/data/heidisql/heidisql.exe "$@"
+      - type: script
+        only-arches:
+          - i386
+        dest-filename: heidisql
+        commands:
+          - export WINEARCH=win32
+          - mkdir -p /var/data/heidisql
+          - cp -a /app/extra/heidisql /var/data
+          
+          - wineboot
+           
+          - wine /var/data/heidisql/heidisql.exe "$@"
+      - type: file
+        path: com.heidisql.Heidisql.appdata.xml
+      - type: file
+        path: com.heidisql.Heidisql.desktop
+      - type: file
+        path: icons/com.heidisql.Heidisql.256x256.png
+      - type: file
+        path: icons/com.heidisql.Heidisql.128x128.png
+      - type: file
+        path: icons/com.heidisql.Heidisql.64x64.png
+      - type: file
+        path: icons/com.heidisql.Heidisql.32x32.png
+      - type: file
+        path: icons/com.heidisql.Heidisql.16x16.png
+
